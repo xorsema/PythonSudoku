@@ -6,6 +6,7 @@ import trail
 import constraint
 import constraintnetwork
 import time
+from collections import Counter
 
 # dictionary mapping heuristic to number
 '''
@@ -21,7 +22,13 @@ It follows similarly to the other heuristics and chekcs
 VariableSelectionHeuristic = {'None': 0, 'MRV': 1, 'Degree': 2}
 #ValueSelectionHeuristic = {'None': 0, 'LeastConstrainingValue': 1}
 ValueSelectionHeuristic = {'None': 0, 'LCV': 1}
-ConsistencyCheck = {'None': 0, 'ForwardChecking': 1, 'ArcConsistency': 2, 'NKT':3}
+ConsistencyCheck = {
+    'None': 0,
+    'ForwardChecking': 1,
+    'ArcConsistency': 2,
+    'NKT': 3,
+    'NKP': 4
+}
 
 
 class BTSolver:
@@ -84,7 +91,9 @@ class BTSolver:
         elif self.cChecks == 2:
             return self.arcConsistency()
         elif self.cChecks == 3:
-	    return self.nakedTriple()
+            return self.nakedTriple()
+        elif self.cChecks == 4:
+            return self.nakedPairs()
         else:
             return self.assignmentsCheck()
 
@@ -107,6 +116,30 @@ class BTSolver:
         """
         pass
 
+    def nakedPairs(self):
+        for v in self.network.variables:
+            neighbors = self.network.getNeighborsOfVariable(v)
+            for n in neighbors:
+                if not (v.isAssigned() or n.isAssigned()):
+                    vvals = v.Values()
+                    nvals = n.Values()
+                    if len(vvals) == len(nvals) == 2 and \
+                       set(vvals) == set(nvals):
+                        common = [
+                            list(filter(lambda x: x in c1, sublist))
+                            for sublist in [
+                                neighbors,
+                                self.network.getNeighborsOfVariable(n)
+                            ]
+                        ]
+                        for c in common:
+                            for val in vvals:
+                                if val in c.Values():
+                                    c.removeValueFromDomain(val)
+                elif v.getAssignment() == n.getAssignment():
+                    return False
+        return True
+
     def forwardChecking(self):
         """
              Implement forward checking.
@@ -118,7 +151,14 @@ class BTSolver:
         """
             TODO: Implement Maintaining Arc Consistency.
         """
-        pass
+        for v in self.network.variables:
+            if v.isAssigned():
+                for n in self.network.getNeighborsOfVariable(v):
+                    if not n.isAssigned():
+                        n.removeValueFromDomain(v.getAssignment())
+                    elif v.getAssignment() == n.getAssignment():
+                        return False
+        return True
 
     def selectNextVariable(self):
         """
@@ -149,7 +189,7 @@ class BTSolver:
             TODO: Implement MRV heuristic
             @return variable with minimum remaining values that isn't assigned, null if all variables are assigned.
         """
-        pass  
+        pass
 
     def getDegree(self):
         """
@@ -186,7 +226,14 @@ class BTSolver:
         """
             TODO: LCV heuristic
         """
-        pass
+        nvalues = list()
+        for n in self.network.getNeighborsOfVariable(v):
+            nvalues += n.domain.values
+        values = v.domain.values + nvalues
+        values = [item for items, c in Counter(values).most_common()
+                  for item in [items] * c]
+        values.reverse()
+        return set(values)
 
     def success(self):
         """ Called when solver finds a solution """
@@ -230,7 +277,7 @@ class BTSolver:
         # print("V SELECTED --> " + str(v))
 
         # check if the assigment is complete
-        if (v == None):
+        if (v is None):
             # print("!!! GETTING IN V == NONE !!!")
             for var in self.network.variables:
                 if not var.isAssigned():

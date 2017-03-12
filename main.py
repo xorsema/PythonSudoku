@@ -77,7 +77,7 @@ if __name__ == '__main__':
     '''once you have implemented more heuristics, you can add the appropriate lines to this conditional clause'''
     if len(sys.argv) < 4:
         raise ValueError("Program did not received enough correct argument.")
-    elif  len(sys.argv) == 4 or sys.argv[4] == 'BT': #no options detected or say BT
+    elif len(sys.argv) == 4 or sys.argv[4] == 'BT': #no options detected or say BT
         print("Default option tokens detected: Backtracking Search (BT)")
     elif sys.argv[4] == 'FC':
         print("FC tokens detected:  Forward Checking (FC)")
@@ -86,14 +86,14 @@ if __name__ == '__main__':
         print("Default option tokens detected: something else ...")
 
     #uncomment once you have implemented the appropriate heuristics
-    
+
     if 'FC' in tokens:
-	solver.setConsistencyChecks(btsolver.ConsistencyCheck['ForwardChecking'])
+        solver.setConsistencyChecks(btsolver.ConsistencyCheck['ForwardChecking'])
     elif 'ACP' in tokens:
-	solver.setConsistencyChecks(btsolver.ConsistencyCheck['ArcConsistency'])
+        solver.setConsistencyChecks(btsolver.ConsistencyCheck['ArcConsistency'])
 
     if 'MRV' in tokens:
-	solver.setVariableSelectionHeuristic(btsolver.VariableSelectionHeuristic['MRV'])
+        solver.setVariableSelectionHeuristic(btsolver.VariableSelectionHeuristic['MRV'])
     elif 'DH' in tokens:
         solver.setVariableSelectionHeuristic(btsolver.VariableSelectionHeuristic['DH'])
 
@@ -102,7 +102,10 @@ if __name__ == '__main__':
 
     if 'NKT' in tokens:
         solver.setConsistencyChecks(btsolver.ConsistencyCheck['NKT'])
-   
+    elif 'NKP' in tokens:
+        solver.setConsistencyChecks(btsolver.ConsistencyCheck['NKP'])
+
+
     isTimeOut = False
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(int(sys.argv[3]))
