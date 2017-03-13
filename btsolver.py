@@ -84,7 +84,7 @@ class BTSolver:
         elif self.cChecks == 2:
             return self.arcConsistency()
         elif self.cChecks == 3:
-            return self.nakedTriple()
+            return self.nakedTriples()
         elif self.cChecks == 4:
             return self.nakedPairs()
         else:
@@ -108,14 +108,14 @@ class BTSolver:
                         return False
         return True
 
-    def nakedPairs(self):
+    def naked(self, length=2):
         for v in self.network.variables:
             neighbors = self.network.getNeighborsOfVariable(v)
             for n in neighbors:
                 if not (v.isAssigned() or n.isAssigned()):
                     vvals = v.Values()
                     nvals = n.Values()
-                    if len(vvals) == len(nvals) == 2 and \
+                    if len(vvals) == len(nvals) == length and \
                        set(vvals) == set(nvals):
                         common = [
                             list(filter(lambda x: x in c1, sublist))
@@ -126,17 +126,17 @@ class BTSolver:
                         ]
                         for c in common:
                             for val in vvals:
-                                if val in c.Values():
+                                if val in c.Values() and c.domain.size() > 1:
                                     c.removeValueFromDomain(val)
                 elif v.getAssignment() == n.getAssignment():
                     return False
         return True
 
+    def nakedPairs(self):
+        return self.naked()
+
     def nakedTriples(self):
-        """
-           TODO:  Implement naked triples heuristic.
-        """
-        pass
+        return self.naked(length=3)
 
     def forwardChecking(self):
         """
