@@ -19,8 +19,7 @@ you can also manually set the heuristics in the main.py file when reading the pa
 as the primary heuristics to use and then break ties within the functions you implement
 It follows similarly to the other heuristics and chekcs
 '''
-VariableSelectionHeuristic = {'None': 0, 'MRV': 1, 'Degree': 2}
-#ValueSelectionHeuristic = {'None': 0, 'LeastConstrainingValue': 1}
+VariableSelectionHeuristic = {'None': 0, 'MRV': 1, 'DH': 2}
 ValueSelectionHeuristic = {'None': 0, 'LCV': 1}
 ConsistencyCheck = {
     'None': 0,
@@ -29,6 +28,7 @@ ConsistencyCheck = {
     'NKT': 3,
     'NKP': 4
 }
+HeuristicCheck = {'None': 0, 'NKP': 1, 'NKT': 2}
 
 
 class BTSolver:
@@ -51,6 +51,7 @@ class BTSolver:
         self.varHeuristics = 0  # refers to which variable selection heuristic in use(0 means default, 1 means MRV, 2 means DEGREE)
         self.valHeuristics = 0  # refers to which value selection heuristic in use(0 means default, 1 means LCV)
         self.cChecks = 0  # refers to which consistency check will be run(0 for backtracking, 1 for forward checking, 2 for arc consistency)
+        self.heuristicChecks = 0
         # self.runCheckOnce = False
         self.tokens = []  # tokens(heuristics to use)
 
@@ -72,6 +73,10 @@ class BTSolver:
     def setConsistencyChecks(self, cc):
         '''modify the consistency check'''
         self.cChecks = cc
+
+    def setHeuristicChecks(self, hc):
+        '''modify the heurisic check (naked pairs and triples)'''
+        self.heuristicChecks += hc
 
     ######### Accessors Method #########
     def getSolution(self):
@@ -97,6 +102,16 @@ class BTSolver:
         else:
             return self.assignmentsCheck()
 
+    def checkHeuristics(self):
+        if self.heuristicChecks == 1:
+            return self.nakedPairs()
+        elif self.heuristicChecks == 2:
+            return self.nakedTriples()
+        elif self.heuristicChecks == 3:
+            return self.nakedPairs() and self.nakedTriples()
+        else:
+            return True
+
     def assignmentsCheck(self):
         """
             default consistency check. Ensures no two variables are assigned to the same value.
@@ -108,13 +123,6 @@ class BTSolver:
                     if v.getAssignment() == vOther.getAssignment():
                         return False
         return True
-
-    def nakedTriple(self):
-        """
-         Implement nakedTriple.
-         can uncomment comments for verbose progress reports
-        """
-        pass
 
     def nakedPairs(self):
         for v in self.network.variables:
@@ -140,10 +148,15 @@ class BTSolver:
                     return False
         return True
 
+    def nakedTriples(self):
+        """
+           TODO:  Implement naked triples heuristic.
+        """
+        pass
+
     def forwardChecking(self):
         """
-             Implement forward checking.
-         can uncomment comments for verbose progress reports
+           TODO:  Implement forward checking.
         """
         pass
 
@@ -197,6 +210,7 @@ class BTSolver:
             @return variable constrained by the most unassigned variables, null if all variables are assigned.
         """
         pass
+
 
     def getNextValues(self, v):
         """
@@ -297,7 +311,7 @@ class BTSolver:
             self.numAssignments += 1
 
             # move to the next assignment
-            if self.checkConsistency():
+            if self.checkConsistency() and self.checkHeuristics():
                 self.solveLevel(level + 1)
 
             # if this assignment failed at any stage, backtrack

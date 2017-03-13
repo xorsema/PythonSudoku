@@ -92,6 +92,12 @@ if __name__ == '__main__':
     elif 'ACP' in tokens:
         solver.setConsistencyChecks(btsolver.ConsistencyCheck['ArcConsistency'])
 
+    if 'NKP' in tokens:
+        solver.setHeuristicChecks(btsolver.HeuristicCheck['NKP'])
+
+    if 'NKT' in tokens:
+        solver.setHeuristicChecks(btsolver.HeuristicCheck['NKT'])
+
     if 'MRV' in tokens:
         solver.setVariableSelectionHeuristic(btsolver.VariableSelectionHeuristic['MRV'])
     elif 'DH' in tokens:
@@ -104,7 +110,6 @@ if __name__ == '__main__':
         solver.setConsistencyChecks(btsolver.ConsistencyCheck['NKT'])
     elif 'NKP' in tokens:
         solver.setConsistencyChecks(btsolver.ConsistencyCheck['NKP'])
-
 
     isTimeOut = False
     signal.signal(signal.SIGALRM, signal_handler)
