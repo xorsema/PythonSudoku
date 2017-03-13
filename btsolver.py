@@ -145,9 +145,6 @@ class BTSolver:
         pass
 
     def arcConsistency(self):
-        """
-            TODO: Implement Maintaining Arc Consistency.
-        """
         for v in self.network.variables:
             if v.isAssigned():
                 for n in self.network.getNeighborsOfVariable(v):
@@ -214,9 +211,6 @@ class BTSolver:
         return sorted(values)
 
     def getValuesLCVOrder(self, v):
-        """
-            TODO: LCV heuristic
-        """
         nvalues = list()
         for n in self.network.getNeighborsOfVariable(v):
             nvalues += n.domain.values
