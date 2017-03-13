@@ -1,24 +1,14 @@
-import filereader
-import gameboard
-import variable
-import domain
-import trail
-import constraint
-import constraintnetwork
 import time
 from collections import Counter
 
-# dictionary mapping heuristic to number
-'''
+import constraint
+import constraintnetwork
+import domain
+import filereader
+import gameboard
+import trail
+import variable
 
-for example, to set the variable selection heuristic to MRV,
-you would say,
-self.setVariableSelectionHeuristic(VariableSelectionHeuristic['MinimumRemainingValue'])
-this is needed when you have more than one heuristic to break ties or use one over the other in precedence.
-you can also manually set the heuristics in the main.py file when reading the parameters
-as the primary heuristics to use and then break ties within the functions you implement
-It follows similarly to the other heuristics and chekcs
-'''
 VariableSelectionHeuristic = {'None': 0, 'MRV': 1, 'DH': 2}
 ValueSelectionHeuristic = {'None': 0, 'LCV': 1}
 ConsistencyCheck = {
@@ -34,7 +24,6 @@ HeuristicCheck = {'None': 0, 'NKP': 1, 'NKT': 2}
 class BTSolver:
     "Backtracking solver"
 
-    ######### Constructors Method #########
     def __init__(self, gb):
         self.network = filereader.GameBoardToConstraintNetwork(gb)
         self.trail = trail.masterTrailVariable
@@ -48,15 +37,18 @@ class BTSolver:
         self.startTime = None
         self.endTime = None
 
-        self.varHeuristics = 0  # refers to which variable selection heuristic in use(0 means default, 1 means MRV, 2 means DEGREE)
-        self.valHeuristics = 0  # refers to which value selection heuristic in use(0 means default, 1 means LCV)
-        self.cChecks = 0  # refers to which consistency check will be run(0 for backtracking, 1 for forward checking, 2 for arc consistency)
+        # refers to which variable selection heuristic in use(0 means default,
+        # 1 means MRV, 2 means DEGREE)
+        self.varHeuristics = 0
+        # refers to which value selection heuristic in use(0 means default, 1
+        # means LCV)
+        self.valHeuristics = 0
+        # refers to which consistency check will be run(0 for backtracking, 1
+        # for forward checking, 2 for arc consistency)
+        self.cChecks = 0
         self.heuristicChecks = 0
         # self.runCheckOnce = False
         self.tokens = []  # tokens(heuristics to use)
-
-    ######### Modifiers Method #########
-
 
     def setTokens(self, tokens):
         ''' set the set of heuristics to be taken into consideration'''
@@ -78,17 +70,13 @@ class BTSolver:
         '''modify the heurisic check (naked pairs and triples)'''
         self.heuristicChecks += hc
 
-    ######### Accessors Method #########
     def getSolution(self):
         return self.gameboard
 
-    # @return time required for the solver to attain in seconds
     def getTimeTaken(self):
         return self.endTime - self.startTime
 
-    ######### Helper Method #########
     def checkConsistency(self):
-        '''which consistency check to run but it is up to you when implementing the heuristics to break ties using the other heuristics passed in'''
         if self.cChecks == 0:
             return self.assignmentsCheck()
         elif self.cChecks == 1:
@@ -113,10 +101,6 @@ class BTSolver:
             return True
 
     def assignmentsCheck(self):
-        """
-            default consistency check. Ensures no two variables are assigned to the same value.
-            @return true if consistent, false otherwise.
-        """
         for v in self.network.variables:
             if v.isAssigned():
                 for vOther in self.network.getNeighborsOfVariable(v):
@@ -174,10 +158,6 @@ class BTSolver:
         return True
 
     def selectNextVariable(self):
-        """
-            Selects the next variable to check.
-            @return next variable to check. null if there are no more variables to check.
-        """
         if self.varHeuristics == 0:
             return self.getfirstUnassignedVariable()
         elif self.varHeuristics == 1:
@@ -188,10 +168,6 @@ class BTSolver:
             return self.getfirstUnassignedVariable()
 
     def getfirstUnassignedVariable(self):
-        """
-            default next variable selection heuristic. Selects the first unassigned variable.
-            @return first unassigned variable. null if no variables are unassigned.
-        """
         for v in self.network.variables:
             if not v.isAssigned():
                 return v
@@ -199,24 +175,27 @@ class BTSolver:
 
     def getMRV(self):
         """
-            TODO: Implement MRV heuristic
-            @return variable with minimum remaining values that isn't assigned, null if all variables are assigned.
+        TODO: Implement MRV heuristic
+        @return variable with minimum remaining values that isn't assigned,
+        null if all variables are assigned.
         """
         pass
 
     def getDegree(self):
         """
-            TODO: Implement Degree heuristic
-            @return variable constrained by the most unassigned variables, null if all variables are assigned.
+        TODO: Implement Degree heuristic
+        @return variable constrained by the most unassigned variables, null if
+        all variables are assigned.
         """
         pass
 
-
     def getNextValues(self, v):
         """
-            Value Selection Heuristics. Orders the values in the domain of the variable
-            passed as a parameter and returns them as a list.
-            @return List of values in the domain of a variable in a specified order.
+        Value Selection Heuristics. Orders the values in
+        the domain of the variable
+        passed as a parameter and returns them as a list.
+        @return List of values in the domain of a
+                variable in a specified order.
         """
         if self.valHeuristics == 0:
             return self.getValuesInOrder(v)
@@ -224,7 +203,6 @@ class BTSolver:
             return self.getValuesLCVOrder(v)
         else:
             return self.getValuesInOrder(v)
-
 
     def getValuesInOrder(self, v):
         """
@@ -234,7 +212,6 @@ class BTSolver:
         """
         values = v.domain.values
         return sorted(values)
-
 
     def getValuesLCVOrder(self, v):
         """
@@ -252,13 +229,12 @@ class BTSolver:
     def success(self):
         """ Called when solver finds a solution """
         self.hassolution = True
-        self.gameboard = filereader.ConstraintNetworkToGameBoard(self.network,
-                                                                 self.gameboard.N,
-                                                                 self.gameboard.p,
-                                                                 self.gameboard.q)
+        self.gameboard = filereader.ConstraintNetworkToGameBoard(
+            self.network,
+            self.gameboard.N,
+            self.gameboard.p,
+            self.gameboard.q)
 
-
-    ######### Solver Method #########
     def solve(self):
         """ Method to start the solver """
         self.startTime = time.time()
@@ -270,13 +246,13 @@ class BTSolver:
         # trail.masterTrailVariable.trailStack = []
         self.trail.trailStack = []
 
-
     def solveLevel(self, level):
         """
-            Solver Level
-            @param level How deep the solver is in its recursion.
-            @throws VariableSelectionException
-        contains some comments that can be uncommented for more in depth analysis
+        Solver Level
+        @param level How deep the solver is in its recursion.
+        @throws VariableSelectionException
+        contains some comments that can be uncommented
+        for more in depth analysis
         """
         # print("=.=.=.=.=.=.=.=.=.=.=.=.=.=.=.=")
         # print("BEFORE ANY SOLVE LEVEL START")
@@ -295,7 +271,9 @@ class BTSolver:
             # print("!!! GETTING IN V == NONE !!!")
             for var in self.network.variables:
                 if not var.isAssigned():
-                    raise ValueError("Something happened with the variable selection heuristic")
+                    raise ValueError(
+                        "Something happened with the \
+                        variable selection heuristic")
             self.success()
             return
 
@@ -306,7 +284,6 @@ class BTSolver:
             self.trail.placeTrailMarker()
 
             # check a value
-            # print("-->CALL v.updateDomain(domain.Domain(i)) to start to test next value.")
             v.updateDomain(domain.Domain(i))
             self.numAssignments += 1
 
