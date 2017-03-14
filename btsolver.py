@@ -1,6 +1,6 @@
 import time
-from collections import Counter
 from itertools import combinations, product
+from operator import itemgetter
 
 import constraint
 import constraintnetwork
@@ -91,7 +91,7 @@ class BTSolver:
         elif self.heuristicChecks == 2:
             return self.nakedTriples()
         elif self.heuristicChecks == 3:
-            return self.nakedPairs() and self.nakedTriples()
+            return self.nakedPairs() or self.nakedTriples()
         else:
             return True
 
@@ -207,13 +207,15 @@ class BTSolver:
         return sorted(values)
 
     def getValuesLCVOrder(self, v):
-        nvalues = list()
+        values = dict()
+        domain = v.Values()
         for n in self.network.getNeighborsOfVariable(v):
-            nvalues += n.Values()
-        values = v.Values() + nvalues
-        common = Counter(values).most_common()
-        rvalues = [x for x, _ in common]
-        return reversed(rvalues)
+            domain += n.Values()
+        for value in domain:
+            values[value] = values.get(value, 0) + 1
+        return [x for x, _
+                in sorted(values.items(),
+                          key=itemgetter(1))]
 
     def success(self):
         """ Called when solver finds a solution """
