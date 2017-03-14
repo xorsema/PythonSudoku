@@ -114,11 +114,6 @@ if __name__ == '__main__':
         solver.setValueSelectionHeuristic(
             btsolver.ValueSelectionHeuristic['LCV'])
 
-    if 'NKT' in tokens:
-        solver.setConsistencyChecks(btsolver.ConsistencyCheck['NKT'])
-    elif 'NKP' in tokens:
-        solver.setConsistencyChecks(btsolver.ConsistencyCheck['NKP'])
-
     isTimeOut = False
     signal.signal(signal.SIGALRM, signal_handler)
     signal.alarm(int(sys.argv[3]))

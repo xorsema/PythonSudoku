@@ -1,5 +1,6 @@
 import time
 from collections import Counter
+from itertools import combinations, product
 
 import constraint
 import constraintnetwork
@@ -14,9 +15,7 @@ ValueSelectionHeuristic = {'None': 0, 'LCV': 1}
 ConsistencyCheck = {
     'None': 0,
     'ForwardChecking': 1,
-    'ArcConsistency': 2,
-    'NKT': 3,
-    'NKP': 4
+    'ArcConsistency': 2
 }
 HeuristicCheck = {'None': 0, 'NKP': 1, 'NKT': 2}
 
@@ -83,10 +82,6 @@ class BTSolver:
             return self.forwardChecking()
         elif self.cChecks == 2:
             return self.arcConsistency()
-        elif self.cChecks == 3:
-            return self.nakedTriples()
-        elif self.cChecks == 4:
-            return self.nakedPairs()
         else:
             return self.assignmentsCheck()
 
@@ -117,13 +112,9 @@ class BTSolver:
                     nvals = n.Values()
                     if len(vvals) == len(nvals) == length and \
                        set(vvals) == set(nvals):
-                        common = [
-                            list(filter(lambda x: x in c1, sublist))
-                            for sublist in [
-                                neighbors,
-                                self.network.getNeighborsOfVariable(n)
-                            ]
-                        ]
+                        nneighbors = self.network.getNeighborsOfVariable(n)
+                        common = [val for val in neighbors
+                                  if val in nneighbors]
                         for c in common:
                             for val in vvals:
                                 if val in c.Values() and c.domain.size() > 1:
@@ -145,13 +136,18 @@ class BTSolver:
         pass
 
     def arcConsistency(self):
-        for v in self.network.variables:
-            if v.isAssigned():
-                for n in self.network.getNeighborsOfVariable(v):
-                    if not n.isAssigned():
-                        n.removeValueFromDomain(v.getAssignment())
-                    elif v.getAssignment() == n.getAssignment():
-                        return False
+        variables = [var for var in self.network.variables if var.isAssigned()]
+        neighbors = map(self.network.getNeighborsOfVariable,
+                        variables)
+        final = list()
+        for v, n in zip(variables, neighbors):
+            final.append(product([v], n))
+        final = [item for sublist in final for item in sublist]
+        for v, n in final:
+            if not n.isAssigned():
+                n.removeValueFromDomain(v.getAssignment())
+            elif v.getAssignment() == n.getAssignment():
+                return False
         return True
 
     def selectNextVariable(self):
@@ -213,12 +209,11 @@ class BTSolver:
     def getValuesLCVOrder(self, v):
         nvalues = list()
         for n in self.network.getNeighborsOfVariable(v):
-            nvalues += n.domain.values
-        values = v.domain.values + nvalues
-        values = [item for items, c in Counter(values).most_common()
-                  for item in [items] * c]
-        values.reverse()
-        return set(values)
+            nvalues += n.Values()
+        values = v.Values() + nvalues
+        common = Counter(values).most_common()
+        rvalues = [x for x, _ in common]
+        return reversed(rvalues)
 
     def success(self):
         """ Called when solver finds a solution """
