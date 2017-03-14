@@ -36,18 +36,10 @@ class BTSolver:
         self.startTime = None
         self.endTime = None
 
-        # refers to which variable selection heuristic in use(0 means default,
-        # 1 means MRV, 2 means DEGREE)
         self.varHeuristics = 0
-        # refers to which value selection heuristic in use(0 means default, 1
-        # means LCV)
         self.valHeuristics = 0
-        # refers to which consistency check will be run(0 for backtracking, 1
-        # for forward checking, 2 for arc consistency)
         self.cChecks = 0
         self.heuristicChecks = 0
-        # self.runCheckOnce = False
-        self.tokens = []  # tokens(heuristics to use)
 
     def setTokens(self, tokens):
         ''' set the set of heuristics to be taken into consideration'''
@@ -229,12 +221,8 @@ class BTSolver:
     def solve(self):
         """ Method to start the solver """
         self.startTime = time.time()
-        # try:
         self.solveLevel(0)
-        # except:
-        # print("Error with variable selection heuristic.")
         self.endTime = time.time()
-        # trail.masterTrailVariable.trailStack = []
         self.trail.trailStack = []
 
     def solveLevel(self, level):
@@ -245,21 +233,13 @@ class BTSolver:
         contains some comments that can be uncommented
         for more in depth analysis
         """
-        # print("=.=.=.=.=.=.=.=.=.=.=.=.=.=.=.=")
-        # print("BEFORE ANY SOLVE LEVEL START")
-        # print(self.network)
-        # print("=.=.=.=.=.=.=.=.=.=.=.=.=.=.=.=")
 
         if self.hassolution:
             return
 
-        # Select unassigned variable
         v = self.selectNextVariable()
-        # print("V SELECTED --> " + str(v))
 
-        # check if the assigment is complete
         if (v is None):
-            # print("!!! GETTING IN V == NONE !!!")
             for var in self.network.variables:
                 if not var.isAssigned():
                     raise ValueError(
@@ -268,44 +248,23 @@ class BTSolver:
             self.success()
             return
 
-        # loop through the values of the variable being checked LCV
-        # print("getNextValues(v): " + str(self.getNextValues(v)))
         for i in self.getNextValues(v):
-            # print("next value to test --> " + str(i))
             self.trail.placeTrailMarker()
 
-            # check a value
             v.updateDomain(domain.Domain(i))
             self.numAssignments += 1
 
-            # move to the next assignment
             if self.checkConsistency() and self.checkHeuristics():
                 self.solveLevel(level + 1)
 
-            # if this assignment failed at any stage, backtrack
             if not self.hassolution:
-                # print("=======================================")
-                # print("AFTER PROCESSED:")
-                # print(self.network)
-                # print("================ ")
-                # print("self.trail before revert change: ")
                 for i in self.trail.trailStack:
                     pass
-                    # print("variable --> " + str(i[0]))
-                    # print("domain backup --> " + str(i[1]))
-                # print("================= ")
 
                 self.trail.undo()
                 self.numBacktracks += 1
-                # print("REVERT CHANGES:")
-                # print(self.network)
-                # print("================ ")
-                # print("self.trail after revert change: ")
                 for i in self.trail.trailStack:
                     pass
-                    # print("variable --> " + str(i[0]))
-                    # print("domain backup --> " + str(i[1]))
-                # print("================= ")
 
             else:
                 return
