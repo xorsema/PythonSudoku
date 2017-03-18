@@ -122,10 +122,16 @@ class BTSolver:
         return self.naked(length=3)
 
     def forwardChecking(self):
-        """
-           TODO:  Implement forward checking.
-        """
-        pass
+        for v in self.network.variables:
+            if v.isAssigned() and v.isModified():
+                for u in self.network.getNeighborsOfVariable(v):
+                    if u.getAssignment() == v.getAssignment():
+                        return False
+                    if not u.isAssigned():
+                        u.removeValueFromDomain(v.getAssignment())
+                        if u.size() == 0:
+                            return False
+        return True
 
     def arcConsistency(self):
         variables = [var for var in self.network.variables if var.isAssigned()]
@@ -159,20 +165,27 @@ class BTSolver:
         return None
 
     def getMRV(self):
-        """
-        TODO: Implement MRV heuristic
-        @return variable with minimum remaining values that isn't assigned,
-        null if all variables are assigned.
-        """
-        pass
+        notAssigned = []
+        theVar = None
+        for v in self.network.variables:
+            if v.isAssigned():
+                continue
+            if theVar == None:
+                theVar = v
+            if v.size() < theVar.size():
+                theVar = v
+        
+        return theVar
+
 
     def getDegree(self):
-        """
-        TODO: Implement Degree heuristic
-        @return variable constrained by the most unassigned variables, null if
-        all variables are assigned.
-        """
-        pass
+        theVar = None
+        theVars = 0
+        for v in self.network.variables:
+            s = len(filter(lambda x: not x.isAssigned(), self.network.getNeighborsOfVariable(v)))
+            if s > theVars:
+                theVar = v
+        return theVar
 
     def getNextValues(self, v):
         """
